@@ -1,0 +1,21 @@
+{
+  "name": "mhfz-run-viewer",
+  "version": "1.0.0",
+  "repository": "https://github.com/DorielRivalet/mhfz-run-viewer.git",
+  "description": "A CLI program for viewing run data from mhfz-overlay databases",
+  "main": "mhfz-run-viewer.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "mhfz"
+  ],
+  "type": "module",
+  "author": "DorielRivalet",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0",
+    "inquirer": "^9.2.12",
+    "sqlite3": "^5.1.7"
+  }
+}
