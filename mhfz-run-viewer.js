@@ -135,7 +135,7 @@ function getMinutesSecondsMillisecondsFromFrames(frames) {
 function exitProgram(db) {
   db.close((err) => {
     if (err) {
-      console.error(err.message);
+      console.error(chalk.red(err.message));
     } else {
       console.log("Closed database connection.");
     }
@@ -192,47 +192,47 @@ async function selectRunData(runData, db) {
 function getArmorHeadStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
   let pieceName = ezlion.ArmorHead[pieceID];
   let address = pieceID.toString(16).toUpperCase();
-  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
-    Slot2ID
-  )} | ${getDecoName(Slot3ID)}`;
+  return `${pieceName} (${chalk.yellow(`${address}`)}) | ${getDecoName(
+    Slot1ID
+  )} | ${getDecoName(Slot2ID)} | ${getDecoName(Slot3ID)}`;
 }
 
 function getArmorChestStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
   let pieceName = ezlion.ArmorChest[pieceID];
   let address = pieceID.toString(16).toUpperCase();
-  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
-    Slot2ID
-  )} | ${getDecoName(Slot3ID)}`;
+  return `${pieceName} (${chalk.yellow(`${address}`)}) | ${getDecoName(
+    Slot1ID
+  )} | ${getDecoName(Slot2ID)} | ${getDecoName(Slot3ID)}`;
 }
 
 function getArmorArmsStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
   let pieceName = ezlion.ArmorArms[pieceID];
   let address = pieceID.toString(16).toUpperCase();
-  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
-    Slot2ID
-  )} | ${getDecoName(Slot3ID)}`;
+  return `${pieceName} (${chalk.yellow(`${address}`)}) | ${getDecoName(
+    Slot1ID
+  )} | ${getDecoName(Slot2ID)} | ${getDecoName(Slot3ID)}`;
 }
 
 function getArmorWaistStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
   let pieceName = ezlion.ArmorWaist[pieceID];
   let address = pieceID.toString(16).toUpperCase();
-  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
-    Slot2ID
-  )} | ${getDecoName(Slot3ID)}`;
+  return `${pieceName} (${chalk.yellow(`${address}`)}) | ${getDecoName(
+    Slot1ID
+  )} | ${getDecoName(Slot2ID)} | ${getDecoName(Slot3ID)}`;
 }
 
 function getArmorLegsStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
   let pieceName = ezlion.ArmorLegs[pieceID];
   let address = pieceID.toString(16).toUpperCase();
-  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
-    Slot2ID
-  )} | ${getDecoName(Slot3ID)}`;
+  return `${pieceName} (${chalk.yellow(`${address}`)}) | ${getDecoName(
+    Slot1ID
+  )} | ${getDecoName(Slot2ID)} | ${getDecoName(Slot3ID)}`;
 }
 
 function getItemData(itemID) {
   const name = ezlion.Item[itemID];
   const address = itemID.toString(16).toUpperCase();
-  return `${name} (${address})`;
+  return `${name} (${chalk.yellow(`${address}`)})`;
 }
 
 function getDecoName(id, slot = 0) {
@@ -252,7 +252,7 @@ function getDecoName(id, slot = 0) {
     return getSigilName(slot);
   }
 
-  let address = ` (${id.toString(16).toUpperCase()})`;
+  let address = ` (${chalk.yellow(id.toString(16).toUpperCase())})`;
 
   return `${decoName}${address}`;
 }
@@ -519,53 +519,61 @@ function displayRunStats(run) {
   let partnyaBagItems = lastPartnyaBagEntry[1].flatMap(Object.keys).map(Number);
 
   console.log(`
-${run.CreatedBy} ${ezlion.WeaponClass[run.WeaponClassID]}
+${chalk.underline.cyan(
+  `${run.CreatedBy} ${ezlion.WeaponClass[run.WeaponClassID]}`
+)}
 
-${ezlion.WeaponType[run.WeaponTypeID]}: ${
+${chalk.bold.blue(`${ezlion.WeaponType[run.WeaponTypeID]}`)}: ${
     run.BlademasterWeaponID
       ? ezlion.WeaponBlademaster[run.BlademasterWeaponID]
       : ezlion.WeaponGunner[run.GunnerWeaponID]
-  } (${
-    run.BlademasterWeaponID
-      ? run.BlademasterWeaponID.toString(16).toUpperCase()
-      : run.GunnerWeaponID.toString(16).toUpperCase()
-  }) | ${ezlion.WeaponStyle[run.StyleID]}
+  } (${chalk.yellow(
+    `${
+      run.BlademasterWeaponID
+        ? run.BlademasterWeaponID.toString(16).toUpperCase()
+        : run.GunnerWeaponID.toString(16).toUpperCase()
+    }`
+  )}) | ${ezlion.WeaponStyle[run.StyleID]}
 ${run.WeaponSlot1} | ${run.WeaponSlot2} | ${run.WeaponSlot3}
-Head: ${getArmorHeadStats(
+${chalk.bold.blue("Head")}: ${getArmorHeadStats(
     run.HeadID,
     run.HeadSlot1ID,
     run.HeadSlot2ID,
     run.HeadSlot3ID
   )}
-Chest: ${getArmorChestStats(
+${chalk.bold.blue("Chest")}: ${getArmorChestStats(
     run.ChestID,
     run.ChestSlot1ID,
     run.ChestSlot2ID,
     run.ChestSlot3ID
   )}
-Arms: ${getArmorArmsStats(
+${chalk.bold.blue("Arms")}: ${getArmorArmsStats(
     run.ArmsID,
     run.ArmsSlot1ID,
     run.ArmsSlot2ID,
     run.ArmsSlot3ID
   )}
-Waist: ${getArmorWaistStats(
+${chalk.bold.blue("Waist")}: ${getArmorWaistStats(
     run.WaistID,
     run.WaistSlot1ID,
     run.WaistSlot2ID,
     run.WaistSlot3ID
   )}
-Legs: ${getArmorLegsStats(
+${chalk.bold.blue("Legs")}: ${getArmorLegsStats(
     run.LegsID,
     run.LegsSlot1ID,
     run.LegsSlot2ID,
     run.LegsSlot3ID
   )}
-Cuffs: ${getItemData(run.Cuff1ID)} | ${getItemData(run.Cuff2ID)}
+${chalk.bold.blue("Cuffs")}: ${getItemData(run.Cuff1ID)} | ${getItemData(
+    run.Cuff2ID
+  )}
 
-Run Date: ${run.CreatedAt} | Run Hash: ${run.QuestHash}}
+${chalk.bold.blue("Run Date")}: ${run.CreatedAt} | ${chalk.bold.blue(
+    "Run Hash"
+  )}: ${run.QuestHash}}
 
-Zenith Skills:
+${chalk.underline.blue("Zenith Skills")}:
 ${getZenithSkills(
   run.ZenithSkill1ID,
   run.ZenithSkill2ID,
@@ -576,16 +584,26 @@ ${getZenithSkills(
   run.ZenithSkill7ID
 )}
 
-Automatic Skills:
-${getAutomaticArmorSkills(
-  run.AutomaticSkill1ID,
-  run.AutomaticSkill2ID,
-  run.AutomaticSkill3ID,
-  run.AutomaticSkill4ID,
-  run.AutomaticSkill5ID
-)}
+${chalk.underline.blue("Automatic Skills")}:
+${
+  getAutomaticArmorSkills(
+    run.AutomaticSkill1ID,
+    run.AutomaticSkill2ID,
+    run.AutomaticSkill3ID,
+    run.AutomaticSkill4ID,
+    run.AutomaticSkill5ID
+  ) === "None"
+    ? chalk.dim("None")
+    : getAutomaticArmorSkills(
+        run.AutomaticSkill1ID,
+        run.AutomaticSkill2ID,
+        run.AutomaticSkill3ID,
+        run.AutomaticSkill4ID,
+        run.AutomaticSkill5ID
+      )
+}
 
-Active Skills:
+${chalk.underline.blue("Active Skills")}:
 ${getArmorSkills(
   run.ActiveSkill1ID,
   run.ActiveSkill2ID,
@@ -608,31 +626,39 @@ ${getArmorSkills(
   run.ActiveSkill19ID
 )}
 
-Caravan Skills:
+${chalk.blue.underline("Caravan Skills")}:
 ${getCaravanSkills(run.CaravanSkill1ID, run.CaravanSkill2ID)}
 
-Diva Skill:
-${ezlion.SkillDiva[run.DivaSkillID]}
+${chalk.underline.blue("Diva Skill")}:
+${
+  ezlion.SkillDiva[run.DivaSkillID] === "None"
+    ? chalk.dim("None")
+    : ezlion.SkillDiva[run.DivaSkillID]
+}
 
-Guild Food:
-${ezlion.SkillArmor[run.GuildFoodID]}
+${chalk.underline.blue("Guild Food")}:
+${
+  ezlion.SkillArmor[run.GuildFoodID] === "None"
+    ? chalk.dim("None")
+    : ezlion.SkillArmor[run.GuildFoodID]
+}
 
-Style Rank:
+${chalk.underline.blue("Style Rank")}:
 ${getGSRSkills(run.StyleRankSkill1ID, run.StyleRankSkill2ID)}
 
-Items:
+${chalk.underline.blue("Inventory")}:
 ${getItems(inventoryItems)}
 
-Ammo:
+${chalk.underline.blue("Ammo Pouch")}:
 ${getItems(ammoPouchItems)}
 
-Partnya Bag:
+${chalk.underline.blue("Partnya Bag")}:
 ${getItems(partnyaBagItems)}
 
-Poogie Item:
+${chalk.underline.blue("Poogie Item")}:
 ${ezlion.Item[run.PoogieItemID]}
 
-Road/Duremudira Skills:
+${chalk.underline.blue("Road/Duremudira Skills")}:
 ${getRoadDureSkills(
   [
     run.RoadDureSkill1ID,
@@ -672,38 +698,43 @@ ${getRoadDureSkills(
   ]
 )}
 
-Quest: ${ezlion.Quest[run.QuestID]}
-${ezlion.ObjectiveType[run.ObjectiveTypeID]} ${run.ObjectiveQuantity} ${
-    run.ObjectiveName
-  }
-Category: ${run.ActualOverlayMode}
-Party Size: ${run.PartySize}
+${chalk.bold.blue("Quest")}: ${ezlion.Quest[run.QuestID]}
+${chalk.bold.blue("Objective")}: ${ezlion.ObjectiveType[run.ObjectiveTypeID]} ${
+    run.ObjectiveQuantity
+  } ${run.ObjectiveName}
+${chalk.bold.blue("Category")}: ${run.ActualOverlayMode}
+${chalk.bold.blue("Party Size")}: ${run.PartySize}
 `);
+
+  const runLink = terminalLink(
+    "Run Link (YouTube)",
+    `https://youtube.com/watch?v=${run.YouTubeID}`
+  );
+  console.log(runLink);
 }
 
 function showRunStats(db, runID) {
   return new Promise((resolve, reject) => {
     db.all(runIDQuery, runID, (err, rows) => {
       if (err) {
-        console.error(err.message);
+        console.error(chalk.red(err.message));
         reject(0);
       }
 
       if (rows.length === 1) {
         let runID = rows[0].RunID;
         console.log(
-          `
+          `${chalk.bgBlue(`
 ========================================================================================
 ========================================================================================
-========================================================================================
+========================================================================================`)}
 
-Run ID: ${runID}
-`
+${chalk.bold.green("Run ID")}: ${runID}`
         );
         displayRunStats(rows[0]);
         resolve(rows.length);
       } else {
-        console.error(`No rows found for run ID ${params}.`);
+        console.error(chalk.red(`No rows found for run ID ${params}.`));
         reject(0);
       }
     });
@@ -714,7 +745,7 @@ function findRuns(db, query, params) {
   return new Promise((resolve, reject) => {
     db.all(query, params, (err, rows) => {
       if (err) {
-        console.error(err.message);
+        console.error(chalk.red(err.message));
         reject(0);
       }
 
@@ -735,9 +766,9 @@ function findRuns(db, query, params) {
         );
         console.table(runIDsFound);
         if (rows.length === 1) {
-          console.log(responses.runFound);
+          console.log(chalk.green.bold(responses.runFound));
         } else {
-          console.log(responses.runsFound);
+          console.log(chalk.green.bold(responses.runsFound));
         }
         resolve(rows.length);
       } else {
@@ -781,7 +812,9 @@ async function promptNextAction(db) {
 async function mainLoop(db = null) {
   if (files.length === 0) {
     console.error(
-      "Database not found, please place the database in the same directory as the program"
+      chalk.red(
+        "Database not found, please place the database in the same directory as the program"
+      )
     );
     process.exit();
   }
@@ -792,7 +825,7 @@ async function mainLoop(db = null) {
       sqlite3.OPEN_READONLY,
       (err) => {
         if (err) {
-          console.error(err.message);
+          console.error(chalk.red(err.message));
           process.exit();
         }
       }
@@ -863,4 +896,55 @@ async function mainLoop(db = null) {
   }
 }
 
+import terminalLink from "terminal-link";
+
+const repoLink = terminalLink(
+  "Repository",
+  "https://github.com/DorielRivalet/mhfz-run-viewer"
+);
+const overlayRepolink = terminalLink(
+  "Overlay Repository",
+  "https://github.com/DorielRivalet/mhfz-overlay"
+);
+console.log(`
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
+$$$$$.....$$- $$$^...$$$=....?$$$$$,....$$$,.............$$$
+  $$$X?--?$    $$?..?$$$$?..X$   =$$?..$$$$$...????~??????$$
+   $$$???.?$$ $$#?..~$$$$?..$$    $$?..$$$$$..?$$$$$$$$$$$$$
+   $$$=....?$$$$,....$$$$?..X$$$$$$$?..$$$$$...$$$$$$$$$  $$
+   $$#...?...$$......$$$$..............$$$$#..........$$    
+   $$?...$......??. .$$$$....???????.  $$$$?..........$$    
+   $$^  .$$.  ..$X. .$$$$.  ^$   $$$.  $$$$?  .$$   $$$$    
+   $$?  .$$$. .$$X. .$$$$.  =$    $$   #$$$?  .$$     $$    
+$$$$$.. .?$$?.$$$.   .$$?    $$$$$$?   .$$$.   ?$$          
+$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$         
+               $$?????????????????????????????X$$           
+              #?????*^.  .~?????????????????????$$          
+              $$$$?                        ??$$$$$          
+              $$$#?   *?????????         ??$$$$$$           
+             $$$$?. *?X$$$$$$$?.        ??$$$$$             
+             $$$$?  ?X$$$$$$??        ??$$$$$$              
+             $$???????#$$????        ??XX$$$                
+             $$#?????$$????.       ?????$$#                 
+                  ~$$$????        ?????$$                   
+                  $$????.       ?????$$$*                   
+                 $$????.       ?????##????$$$               
+               $$$???=       .???#$$X??????$$               
+              $$$$$?.       ?X$$$$$$$?. ??$$$               
+             $$$$$?.      ??$$$$$$$??   ?$$$$               
+           $$$$$#*       .???????      ?#$$$$               
+          $$$$$?.                      ?$$$$                
+          $$$$$????????????????????????X$$$$                
+           $$????????????????????????????$$                 
+             $$$$$$$$$$$$$$$$$$$$$$$$$$$                    
+
+      ____                   _    __ _                           
+     / __ \\ __  __ ____     | |  / /(_)___  _      __ ___   _____
+    / /_/ // / / // __ \\    | | / // // _ \\| | /| / // _ \\ / ___/
+   / _, _// /_/ // / / /    | |/ // //  __/| |/ |/ //  __// /    
+  /_/ |_| \\__,_//_/ /_/     |___//_/ \\___/ |__/|__/ \\___//_/     
+                                                                         
+             `);
+console.log(repoLink);
+console.log(overlayRepolink);
 mainLoop();

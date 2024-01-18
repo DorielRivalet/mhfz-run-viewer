@@ -1,5 +1,7 @@
 # mhfz-run-viewer
 
+![demo](./demo.png)
+
 A CLI program for viewing run data from mhfz-overlay databases.
 
 This does not do any validation, but instead is used for visualization.
@@ -8,11 +10,11 @@ This does not do any validation, but instead is used for visualization.
 
 - A SQLite database file from the latest mhfz-overlay version.
 
-- Node
+- Node.js
 
 ## Dependencies
 
-`npm install inquirer sqlite3 chalk ezlion`
+`npm install inquirer sqlite3 chalk terminal-link ezlion`
 
 ## Usage
 
