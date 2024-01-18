@@ -2,24 +2,7 @@ import inquirer from "inquirer";
 import chalk from "chalk";
 import sqlite3 from "sqlite3";
 import fs from "fs";
-
-// TODO port from ezlion
-const weaponTypes = [
-  "Great Sword",
-  "Heavy Bowgun",
-  "Hammer",
-  "Lance",
-  "Sword and Shield",
-  "Light Bowgun",
-  "Dual Swords",
-  "Long Sword",
-  "Hunting Horn",
-  "Gunlance",
-  "Bow",
-  "Tonfa",
-  "Switch Axe F",
-  "Magnet Spike",
-];
+import ezlion from "ezlion";
 
 /** The prompt responses */
 const responses = {
@@ -49,8 +32,36 @@ const runIDsFound = [];
 
 const baseQuery =
   "SELECT Quests.*, PlayerGear.WeaponTypeID FROM Quests INNER JOIN PlayerGear ON Quests.RunID = PlayerGear.RunID WHERE Quests.FinalTimeDisplay = ?";
-const runIDQuery =
-  "SELECT Quests.*, PlayerGear.WeaponTypeID FROM Quests INNER JOIN PlayerGear ON Quests.RunID = PlayerGear.RunID WHERE Quests.RunID = ?";
+
+const runIDQuery = `
+ SELECT 
+   Quests.*, 
+   PlayerGear.*, 
+   AutomaticSkills.*, 
+   CaravanSkills.*, 
+   RoadDureSkills.*, 
+   StyleRankSkills.*, 
+   ZenithSkills.*,
+   ActiveSkills.*
+ FROM 
+   Quests 
+ LEFT JOIN 
+   PlayerGear ON Quests.RunID = PlayerGear.RunID 
+ LEFT JOIN 
+   AutomaticSkills ON Quests.RunID = AutomaticSkills.RunID 
+ LEFT JOIN 
+   CaravanSkills ON Quests.RunID = CaravanSkills.RunID 
+ LEFT JOIN 
+   RoadDureSkills ON Quests.RunID = RoadDureSkills.RunID 
+ LEFT JOIN 
+   StyleRankSkills ON Quests.RunID = StyleRankSkills.RunID 
+ LEFT JOIN 
+   ZenithSkills ON Quests.RunID = ZenithSkills.RunID 
+  LEFT JOIN 
+  ActiveSkills ON Quests.RunID = ActiveSkills.RunID 
+ WHERE 
+   Quests.RunID = ?
+`;
 
 let files = fs.readdirSync(".").filter((file) => file.endsWith(".sqlite"));
 let dbFilePath = files[0];
@@ -178,6 +189,498 @@ async function selectRunData(runData, db) {
   }
 }
 
+function getArmorHeadStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
+  let pieceName = ezlion.ArmorHead[pieceID];
+  let address = pieceID.toString(16).toUpperCase();
+  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
+    Slot2ID
+  )} | ${getDecoName(Slot3ID)}`;
+}
+
+function getArmorChestStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
+  let pieceName = ezlion.ArmorChest[pieceID];
+  let address = pieceID.toString(16).toUpperCase();
+  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
+    Slot2ID
+  )} | ${getDecoName(Slot3ID)}`;
+}
+
+function getArmorArmsStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
+  let pieceName = ezlion.ArmorArms[pieceID];
+  let address = pieceID.toString(16).toUpperCase();
+  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
+    Slot2ID
+  )} | ${getDecoName(Slot3ID)}`;
+}
+
+function getArmorWaistStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
+  let pieceName = ezlion.ArmorWaist[pieceID];
+  let address = pieceID.toString(16).toUpperCase();
+  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
+    Slot2ID
+  )} | ${getDecoName(Slot3ID)}`;
+}
+
+function getArmorLegsStats(pieceID, Slot1ID, Slot2ID, Slot3ID) {
+  let pieceName = ezlion.ArmorLegs[pieceID];
+  let address = pieceID.toString(16).toUpperCase();
+  return `${pieceName} (${address}) | ${getDecoName(Slot1ID)} | ${getDecoName(
+    Slot2ID
+  )} | ${getDecoName(Slot3ID)}`;
+}
+
+function getItemData(itemID) {
+  const name = ezlion.Item[itemID];
+  const address = itemID.toString(16).toUpperCase();
+  return `${name} (${address})`;
+}
+
+function getDecoName(id, slot = 0) {
+  let decoName = "";
+  let keyFound = id in ezlion.Item;
+  if (keyFound) {
+    decoName = ezlion.Item[id];
+  }
+
+  if (decoName === null || decoName === "None" || decoName === "") {
+    decoName = "Empty";
+  } else {
+    decoName += "";
+  }
+
+  if (decoName === "Empty" && slot !== 0) {
+    return getSigilName(slot);
+  }
+
+  let address = ` (${id.toString(16).toUpperCase()})`;
+
+  return `${decoName}${address}`;
+}
+
+function getAutomaticArmorSkills(skill1, skill2, skill3, skill4, skill5) {
+  let armorSkillName = "";
+  let skills = [skill1, skill2, skill3, skill4, skill5];
+  for (let i = 0; i < skills.length; i++) {
+    let skillId = skills[i];
+    let keyFound = skillId in ezlion.SkillArmor;
+
+    if (keyFound) {
+      let skillName = ezlion.SkillArmor[skillId];
+      if (skillName !== "None" && skillName !== "") {
+        armorSkillName += skillName;
+        if (i !== skills.length - 1) {
+          armorSkillName += ", ";
+        }
+
+        if (i % 5 === 4) {
+          armorSkillName += "\n";
+        }
+      }
+    }
+  }
+
+  if (armorSkillName === "") {
+    return "None";
+  }
+
+  return armorSkillName;
+}
+
+function getCaravanSkills(skill1, skill2, skill3) {
+  let caravanSkillName = "";
+  let skills = [skill1, skill2, skill3];
+  for (let i = 0; i < skills.length; i++) {
+    let skillId = skills[i];
+    let keyFound = skillId in ezlion.SkillCaravan;
+
+    if (keyFound) {
+      let skillName = ezlion.SkillCaravan[skillId];
+      if (skillName !== "None" && skillName !== "") {
+        caravanSkillName += skillName;
+        if (i !== skills.length - 1) {
+          caravanSkillName += ", ";
+        }
+
+        if (i % 5 === 4) {
+          caravanSkillName += "\n";
+        }
+      }
+    }
+  }
+
+  if (caravanSkillName === "") {
+    return "None";
+  }
+
+  return caravanSkillName;
+}
+
+function getZenithSkills(
+  skill1,
+  skill2,
+  skill3,
+  skill4,
+  skill5,
+  skill6,
+  skill7
+) {
+  let armorSkillName = "";
+  let skills = [skill1, skill2, skill3, skill4, skill5, skill6, skill7];
+  for (let i = 0; i < skills.length; i++) {
+    let skillId = skills[i];
+    let keyFound = skillId in ezlion.SkillZenith;
+
+    if (keyFound) {
+      let skillName = ezlion.SkillZenith[skillId];
+      if (skillName !== "None" && skillName !== "") {
+        armorSkillName += skillName;
+        if (i !== skills.length - 1) {
+          armorSkillName += ", ";
+        }
+
+        if (i % 5 === 4) {
+          armorSkillName += "\n";
+        }
+      }
+    }
+  }
+
+  if (armorSkillName === "") {
+    return "None";
+  }
+
+  return armorSkillName;
+}
+
+function getGSRSkills(skill1, skill2) {
+  let styleRankSkillName = "";
+  let skills = [skill1, skill2];
+  for (let i = 0; i < skills.length; i++) {
+    let skillId = skills[i];
+    let keyFound = skillId in ezlion.SkillStyleRank;
+    if (keyFound) {
+      let skillName = ezlion.SkillStyleRank[skillId];
+      if (skillName !== "None" && skillName !== "") {
+        styleRankSkillName += skillName;
+        if (i !== skills.length - 1) {
+          styleRankSkillName += ", ";
+        }
+
+        if (i % 5 === 4) {
+          styleRankSkillName += "\n";
+        }
+      }
+    }
+  }
+
+  if (styleRankSkillName === "") {
+    return "None";
+  }
+
+  return styleRankSkillName;
+}
+
+function getItems(items) {
+  let sb = "";
+  let counter = 0;
+  for (let i = 0; i < items.length; i++) {
+    let id = items[i];
+    let keyFound = id in ezlion.Item;
+
+    if (keyFound) {
+      let value = ezlion.Item[id];
+      if (value !== "None" && value !== "") {
+        sb += value;
+        counter++;
+        if (counter % 5 === 0) {
+          sb += "\n";
+        } else if (i !== items.length - 1) {
+          sb += ", ";
+        }
+      }
+    }
+  }
+
+  if (sb === "") {
+    return "None";
+  }
+
+  return sb;
+}
+
+function getRoadDureSkills(skills, levels) {
+  let name = "";
+  for (let i = 0; i < skills.length; i++) {
+    let id = skills[i];
+    let level = levels[i];
+    let keyFound = id in ezlion.SkillRoadTower;
+    if (keyFound) {
+      let value = ezlion.SkillRoadTower[id];
+      if (value !== "None" && value !== "") {
+        // Return the skill and level in the format of ${skillName} LV${level}
+        name += `${value} LV${level}`;
+        if (i !== skills.length - 1) {
+          name += ", ";
+        }
+
+        if (i % 5 === 4) {
+          name += "\n";
+        }
+      }
+    }
+  }
+
+  return name === "" ? "None" : name;
+}
+
+function getArmorSkills(
+  skill1,
+  skill2,
+  skill3,
+  skill4,
+  skill5,
+  skill6,
+  skill7,
+  skill8,
+  skill9,
+  skill10,
+  skill11,
+  skill12,
+  skill13,
+  skill14,
+  skill15,
+  skill16,
+  skill17,
+  skill18,
+  skill19
+) {
+  let armorSkillName = "";
+  let skills = [
+    skill1,
+    skill2,
+    skill3,
+    skill4,
+    skill5,
+    skill6,
+    skill7,
+    skill8,
+    skill9,
+    skill10,
+    skill11,
+    skill12,
+    skill13,
+    skill14,
+    skill15,
+    skill16,
+    skill17,
+    skill18,
+    skill19,
+  ];
+  for (let i = 0; i < skills.length; i++) {
+    let skillId = skills[i];
+    let keyFound = skillId in ezlion.SkillArmor;
+
+    if (keyFound) {
+      let skillName = ezlion.SkillArmor[skillId];
+      if (skillName !== "None" && skillName !== "") {
+        armorSkillName += skillName;
+        if (i !== skills.length - 1) {
+          armorSkillName += ", ";
+        }
+
+        if (i % 5 === 4) {
+          armorSkillName += "\n";
+        }
+      }
+    }
+  }
+
+  if (armorSkillName === "") {
+    return "None";
+  }
+
+  return armorSkillName;
+}
+
+function displayRunStats(run) {
+  let inventory = JSON.parse(run.PlayerInventoryDictionary);
+  let ammoPouch = JSON.parse(run.PlayerAmmoPouchDictionary);
+  let partnyaBag = JSON.parse(run.PartnyaBagDictionary);
+
+  let lastInventoryEntry =
+    Object.entries(inventory)[Object.keys(inventory).length - 1];
+  let lastAmmoPouchEntry =
+    Object.entries(ammoPouch)[Object.keys(ammoPouch).length - 1];
+  let lastPartnyaBagEntry =
+    Object.entries(partnyaBag)[Object.keys(partnyaBag).length - 1];
+
+  let inventoryItems = lastInventoryEntry[1].flatMap(Object.keys).map(Number);
+  let ammoPouchItems = lastAmmoPouchEntry[1].flatMap(Object.keys).map(Number);
+  let partnyaBagItems = lastPartnyaBagEntry[1].flatMap(Object.keys).map(Number);
+
+  console.log(`
+${run.CreatedBy} ${ezlion.WeaponClass[run.WeaponClassID]}
+
+${ezlion.WeaponType[run.WeaponTypeID]}: ${
+    run.BlademasterWeaponID
+      ? ezlion.WeaponBlademaster[run.BlademasterWeaponID]
+      : ezlion.WeaponGunner[run.GunnerWeaponID]
+  } (${
+    run.BlademasterWeaponID
+      ? run.BlademasterWeaponID.toString(16).toUpperCase()
+      : run.GunnerWeaponID.toString(16).toUpperCase()
+  }) | ${ezlion.WeaponStyle[run.StyleID]}
+${run.WeaponSlot1} | ${run.WeaponSlot2} | ${run.WeaponSlot3}
+Head: ${getArmorHeadStats(
+    run.HeadID,
+    run.HeadSlot1ID,
+    run.HeadSlot2ID,
+    run.HeadSlot3ID
+  )}
+Chest: ${getArmorChestStats(
+    run.ChestID,
+    run.ChestSlot1ID,
+    run.ChestSlot2ID,
+    run.ChestSlot3ID
+  )}
+Arms: ${getArmorArmsStats(
+    run.ArmsID,
+    run.ArmsSlot1ID,
+    run.ArmsSlot2ID,
+    run.ArmsSlot3ID
+  )}
+Waist: ${getArmorWaistStats(
+    run.WaistID,
+    run.WaistSlot1ID,
+    run.WaistSlot2ID,
+    run.WaistSlot3ID
+  )}
+Legs: ${getArmorLegsStats(
+    run.LegsID,
+    run.LegsSlot1ID,
+    run.LegsSlot2ID,
+    run.LegsSlot3ID
+  )}
+Cuffs: ${getItemData(run.Cuff1ID)} | ${getItemData(run.Cuff2ID)}
+
+Run Date: ${run.CreatedAt} | Run Hash: ${run.QuestHash}}
+
+Zenith Skills:
+${getZenithSkills(
+  run.ZenithSkill1ID,
+  run.ZenithSkill2ID,
+  run.ZenithSkill3ID,
+  run.ZenithSkill4ID,
+  run.ZenithSkill5ID,
+  run.ZenithSkill6ID,
+  run.ZenithSkill7ID
+)}
+
+Automatic Skills:
+${getAutomaticArmorSkills(
+  run.AutomaticSkill1ID,
+  run.AutomaticSkill2ID,
+  run.AutomaticSkill3ID,
+  run.AutomaticSkill4ID,
+  run.AutomaticSkill5ID
+)}
+
+Active Skills:
+${getArmorSkills(
+  run.ActiveSkill1ID,
+  run.ActiveSkill2ID,
+  run.ActiveSkill3ID,
+  run.ActiveSkill4ID,
+  run.ActiveSkill5ID,
+  run.ActiveSkill6ID,
+  run.ActiveSkill7ID,
+  run.ActiveSkill8ID,
+  run.ActiveSkill9ID,
+  run.ActiveSkill10ID,
+  run.ActiveSkill11ID,
+  run.ActiveSkill12ID,
+  run.ActiveSkill13ID,
+  run.ActiveSkill14ID,
+  run.ActiveSkill15ID,
+  run.ActiveSkill16ID,
+  run.ActiveSkill17ID,
+  run.ActiveSkill18ID,
+  run.ActiveSkill19ID
+)}
+
+Caravan Skills:
+${getCaravanSkills(run.CaravanSkill1ID, run.CaravanSkill2ID)}
+
+Diva Skill:
+${ezlion.SkillDiva[run.DivaSkillID]}
+
+Guild Food:
+${ezlion.SkillArmor[run.GuildFoodID]}
+
+Style Rank:
+${getGSRSkills(run.StyleRankSkill1ID, run.StyleRankSkill2ID)}
+
+Items:
+${getItems(inventoryItems)}
+
+Ammo:
+${getItems(ammoPouchItems)}
+
+Partnya Bag:
+${getItems(partnyaBagItems)}
+
+Poogie Item:
+${ezlion.Item[run.PoogieItemID]}
+
+Road/Duremudira Skills:
+${getRoadDureSkills(
+  [
+    run.RoadDureSkill1ID,
+    run.RoadDureSkill2ID,
+    run.RoadDureSkill3ID,
+    run.RoadDureSkill4ID,
+    run.RoadDureSkill5ID,
+    run.RoadDureSkill6ID,
+    run.RoadDureSkill7ID,
+    run.RoadDureSkill8ID,
+    run.RoadDureSkill9ID,
+    run.RoadDureSkill10ID,
+    run.RoadDureSkill11ID,
+    run.RoadDureSkill12ID,
+    run.RoadDureSkill13ID,
+    run.RoadDureSkill14ID,
+    run.RoadDureSkill15ID,
+    run.RoadDureSkill16ID,
+  ],
+  [
+    run.RoadDureSkill1Level,
+    run.RoadDureSkill2Level,
+    run.RoadDureSkill3Level,
+    run.RoadDureSkill4Level,
+    run.RoadDureSkill5Level,
+    run.RoadDureSkill6Level,
+    run.RoadDureSkill7Level,
+    run.RoadDureSkill8Level,
+    run.RoadDureSkill9Level,
+    run.RoadDureSkill10Level,
+    run.RoadDureSkill11Level,
+    run.RoadDureSkill12Level,
+    run.RoadDureSkill13Level,
+    run.RoadDureSkill14ILevel,
+    run.RoadDureSkill15Level,
+    run.RoadDureSkill16Level,
+  ]
+)}
+
+Quest: ${ezlion.Quest[run.QuestID]}
+${ezlion.ObjectiveType[run.ObjectiveTypeID]} ${run.ObjectiveQuantity} ${
+    run.ObjectiveName
+  }
+Category: ${run.ActualOverlayMode}
+Party Size: ${run.PartySize}
+`);
+}
+
 function showRunStats(db, runID) {
   return new Promise((resolve, reject) => {
     db.all(runIDQuery, runID, (err, rows) => {
@@ -186,24 +689,18 @@ function showRunStats(db, runID) {
         reject(0);
       }
 
-      const stats = [];
+      if (rows.length === 1) {
+        let runID = rows[0].RunID;
+        console.log(
+          `
+========================================================================================
+========================================================================================
+========================================================================================
 
-      if (rows.length > 0) {
-        stats.push(
-          ...rows.map((row) => {
-            return {
-              runID: row.RunID,
-              time: row.FinalTimeDisplay,
-              date: getDate(row.CreatedAt),
-              objective: row.ObjectiveName,
-              category: row.ActualOverlayMode,
-              questID: row.QuestID,
-              weapon: weaponTypes[row.WeaponTypeID],
-              partySize: row.PartySize,
-            };
-          })
+Run ID: ${runID}
+`
         );
-        console.table(stats);
+        displayRunStats(rows[0]);
         resolve(rows.length);
       } else {
         console.error(`No rows found for run ID ${params}.`);
@@ -213,7 +710,7 @@ function showRunStats(db, runID) {
   });
 }
 
-function findRun(db, query, params) {
+function findRuns(db, query, params) {
   return new Promise((resolve, reject) => {
     db.all(query, params, (err, rows) => {
       if (err) {
@@ -231,7 +728,7 @@ function findRun(db, query, params) {
               objective: row.ObjectiveName,
               category: row.ActualOverlayMode,
               questID: row.QuestID,
-              weapon: weaponTypes[row.WeaponTypeID],
+              weapon: ezlion.WeaponType[row.WeaponTypeID],
               partySize: row.PartySize,
             };
           })
@@ -317,7 +814,7 @@ async function mainLoop(db = null) {
   timeInput = time.elapsed;
   const frames = getFramesFromMinutesSecondsMilliseconds(timeInput);
 
-  let runFound = await findRun(db, baseQuery, [`${timeInput}`]);
+  let runFound = await findRuns(db, baseQuery, [`${timeInput}`]);
   while (!runFound) {
     const actionPrompt = await inquirer.prompt({
       type: "list",
@@ -332,7 +829,7 @@ async function mainLoop(db = null) {
         maximumFrames = frames + framesRange;
 
         const query = `SELECT Quests.*, PlayerGear.WeaponTypeID FROM Quests INNER JOIN PlayerGear ON Quests.RunID = PlayerGear.RunID WHERE Quests.FinalTimeValue BETWEEN ? AND ?`;
-        runFound = await findRun(db, query, [minimumFrames, maximumFrames]);
+        runFound = await findRuns(db, query, [minimumFrames, maximumFrames]);
         framesRange += framesRangeIncrease;
         break;
       case "Restart":

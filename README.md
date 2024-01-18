@@ -12,7 +12,7 @@ This does not do any validation, but instead is used for visualization.
 
 ## Dependencies
 
-`npm install inquirer sqlite3 chalk`
+`npm install inquirer sqlite3 chalk ezlion`
 
 ## Usage
 
