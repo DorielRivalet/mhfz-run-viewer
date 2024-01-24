@@ -14,6 +14,7 @@ const responses = {
 /**The actions after entering a time */
 const actionsFound = {
   view: "View run",
+  viewDetailed: "View run (detailed)",
   restart: "Restart",
   exit: "Exit",
 };
@@ -155,10 +156,10 @@ function isValidRunID(input) {
   return regex.test(input);
 }
 
-async function selectRunData(runData, db) {
+async function selectRunData(runData, db, isDetailed = false) {
   if (runData.length === 1) {
     // If only one run was found, display its data.
-    await showRunStats(db, runData[0].runID);
+    await showRunStats(db, runData[0].runID, isDetailed);
     // After runs are shown, prompt for the next action
     await promptNextAction(db);
     return;
@@ -181,7 +182,9 @@ async function selectRunData(runData, db) {
     const selectedRunIDs = answer.runIDs.split(" ").map(Number);
 
     // Then for each run ID, retrieve from the runIDsFound the corresponding data.
-    await Promise.all(selectedRunIDs.map((runId) => showRunStats(db, runId)));
+    await Promise.all(
+      selectedRunIDs.map((runId) => showRunStats(db, runId, isDetailed))
+    );
 
     // After runs are shown, prompt for the next action
     await promptNextAction(db);
@@ -502,7 +505,7 @@ function getArmorSkills(
   return armorSkillName;
 }
 
-function displayRunStats(run) {
+function displayRunStats(run, isDetailed = false) {
   let inventory = JSON.parse(run.PlayerInventoryDictionary);
   let ammoPouch = JSON.parse(run.PlayerAmmoPouchDictionary);
   let partnyaBag = JSON.parse(run.PartnyaBagDictionary);
@@ -521,60 +524,63 @@ function displayRunStats(run) {
   let partnyaBagItems = lastPartnyaBagEntry[1].flatMap(Object.keys).map(Number);
   let lastAreaValue = lastAreaEntry[1];
 
-  console.log(`
+  if (isDetailed) {
+    console.log(run);
+  } else {
+    console.log(`
 ${chalk.underline.cyan(
   `${run.CreatedBy} ${ezlion.WeaponClass[run.WeaponClassID]}`
 )}
 
 ${chalk.bold.blue(`${ezlion.WeaponType[run.WeaponTypeID]}`)}: ${
-    run.BlademasterWeaponID
-      ? ezlion.WeaponBlademaster[run.BlademasterWeaponID]
-      : ezlion.WeaponGunner[run.GunnerWeaponID]
-  } (${chalk.yellow(
-    `${
       run.BlademasterWeaponID
-        ? run.BlademasterWeaponID.toString(16).toUpperCase()
-        : run.GunnerWeaponID.toString(16).toUpperCase()
-    }`
-  )}) | ${ezlion.WeaponStyle[run.StyleID]}
+        ? ezlion.WeaponBlademaster[run.BlademasterWeaponID]
+        : ezlion.WeaponGunner[run.GunnerWeaponID]
+    } (${chalk.yellow(
+      `${
+        run.BlademasterWeaponID
+          ? run.BlademasterWeaponID.toString(16).toUpperCase()
+          : run.GunnerWeaponID.toString(16).toUpperCase()
+      }`
+    )}) | ${ezlion.WeaponStyle[run.StyleID]}
 ${run.WeaponSlot1} | ${run.WeaponSlot2} | ${run.WeaponSlot3}
 ${chalk.bold.blue("Head")}: ${getArmorHeadStats(
-    run.HeadID,
-    run.HeadSlot1ID,
-    run.HeadSlot2ID,
-    run.HeadSlot3ID
-  )}
+      run.HeadID,
+      run.HeadSlot1ID,
+      run.HeadSlot2ID,
+      run.HeadSlot3ID
+    )}
 ${chalk.bold.blue("Chest")}: ${getArmorChestStats(
-    run.ChestID,
-    run.ChestSlot1ID,
-    run.ChestSlot2ID,
-    run.ChestSlot3ID
-  )}
+      run.ChestID,
+      run.ChestSlot1ID,
+      run.ChestSlot2ID,
+      run.ChestSlot3ID
+    )}
 ${chalk.bold.blue("Arms")}: ${getArmorArmsStats(
-    run.ArmsID,
-    run.ArmsSlot1ID,
-    run.ArmsSlot2ID,
-    run.ArmsSlot3ID
-  )}
+      run.ArmsID,
+      run.ArmsSlot1ID,
+      run.ArmsSlot2ID,
+      run.ArmsSlot3ID
+    )}
 ${chalk.bold.blue("Waist")}: ${getArmorWaistStats(
-    run.WaistID,
-    run.WaistSlot1ID,
-    run.WaistSlot2ID,
-    run.WaistSlot3ID
-  )}
+      run.WaistID,
+      run.WaistSlot1ID,
+      run.WaistSlot2ID,
+      run.WaistSlot3ID
+    )}
 ${chalk.bold.blue("Legs")}: ${getArmorLegsStats(
-    run.LegsID,
-    run.LegsSlot1ID,
-    run.LegsSlot2ID,
-    run.LegsSlot3ID
-  )}
+      run.LegsID,
+      run.LegsSlot1ID,
+      run.LegsSlot2ID,
+      run.LegsSlot3ID
+    )}
 ${chalk.bold.blue("Cuffs")}: ${getItemData(run.Cuff1ID)} | ${getItemData(
-    run.Cuff2ID
-  )}
+      run.Cuff2ID
+    )}
 
 ${chalk.bold.blue("Run Date")}: ${run.CreatedAt} | ${chalk.bold.blue(
-    "Run Hash"
-  )}: ${run.QuestHash}}
+      "Run Hash"
+    )}: ${run.QuestHash}}
 
 ${chalk.underline.blue("Zenith Skills")}:
 ${getZenithSkills(
@@ -703,15 +709,16 @@ ${getRoadDureSkills(
 
 ${chalk.bold.blue("Quest")}: ${ezlion.Quest[run.QuestID]}
 ${chalk.bold.blue("Objective")}: ${ezlion.ObjectiveType[run.ObjectiveTypeID]} ${
-    run.ObjectiveQuantity
-  } ${run.ObjectiveName}
+      run.ObjectiveQuantity
+    } ${run.ObjectiveName}
 ${chalk.bold.blue("Starting Area")}: ${ezlion.Location[lastAreaValue]}
 ${chalk.bold.blue("Category")}: ${run.ActualOverlayMode}
 ${chalk.bold.blue("Party Size")}: ${run.PartySize}
 ${chalk.bold.blue("Time")}: ${run.FinalTimeDisplay} (${
-    run.FinalTimeValue
-  } frames)
+      run.FinalTimeValue
+    } frames)
 `);
+  }
 
   const runLink = terminalLink(
     "Run Link (YouTube)",
@@ -720,7 +727,7 @@ ${chalk.bold.blue("Time")}: ${run.FinalTimeDisplay} (${
   console.log(runLink);
 }
 
-function showRunStats(db, runID) {
+function showRunStats(db, runID, isDetailed = false) {
   return new Promise((resolve, reject) => {
     db.all(runIDQuery, runID, (err, rows) => {
       if (err) {
@@ -738,7 +745,7 @@ function showRunStats(db, runID) {
 
 ${chalk.bold.green("Run ID")}: ${runID}`
         );
-        displayRunStats(rows[0]);
+        displayRunStats(rows[0], isDetailed);
         resolve(rows.length);
       } else {
         console.error(chalk.red(`No rows found for run ID ${params}.`));
@@ -798,13 +805,21 @@ async function promptNextAction(db) {
     type: "list",
     name: "option",
     message: "Select an action:",
-    choices: ["View another run", "Restart", "Exit"],
+    choices: [
+      "View another run",
+      "View another run (detailed)",
+      "Restart",
+      "Exit",
+    ],
   });
 
   switch (actionPrompt.option) {
     case "View another run":
       // Call selectRunData to allow viewing another run
       selectRunData([0, 0], db);
+      break;
+    case "View another run (detailed)":
+      selectRunData([0, 0], db, true);
       break;
     case "Restart":
       resetValues();
@@ -892,6 +907,9 @@ async function mainLoop(db = null) {
   switch (actionPrompt.option) {
     case "View run":
       selectRunData(runIDsFound, db);
+      break;
+    case "View run (detailed)":
+      selectRunData(runIDsFound, db, true);
       break;
     case "Restart":
       resetValues();
