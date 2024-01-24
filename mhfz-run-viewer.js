@@ -506,6 +506,7 @@ function displayRunStats(run) {
   let inventory = JSON.parse(run.PlayerInventoryDictionary);
   let ammoPouch = JSON.parse(run.PlayerAmmoPouchDictionary);
   let partnyaBag = JSON.parse(run.PartnyaBagDictionary);
+  let areas = JSON.parse(run.AreaChangesDictionary);
 
   let lastInventoryEntry =
     Object.entries(inventory)[Object.keys(inventory).length - 1];
@@ -513,10 +514,12 @@ function displayRunStats(run) {
     Object.entries(ammoPouch)[Object.keys(ammoPouch).length - 1];
   let lastPartnyaBagEntry =
     Object.entries(partnyaBag)[Object.keys(partnyaBag).length - 1];
+  let lastAreaEntry = Object.entries(areas)[Object.keys(areas).length - 1];
 
   let inventoryItems = lastInventoryEntry[1].flatMap(Object.keys).map(Number);
   let ammoPouchItems = lastAmmoPouchEntry[1].flatMap(Object.keys).map(Number);
   let partnyaBagItems = lastPartnyaBagEntry[1].flatMap(Object.keys).map(Number);
+  let lastAreaValue = lastAreaEntry[1];
 
   console.log(`
 ${chalk.underline.cyan(
@@ -702,8 +705,12 @@ ${chalk.bold.blue("Quest")}: ${ezlion.Quest[run.QuestID]}
 ${chalk.bold.blue("Objective")}: ${ezlion.ObjectiveType[run.ObjectiveTypeID]} ${
     run.ObjectiveQuantity
   } ${run.ObjectiveName}
+${chalk.bold.blue("Starting Area")}: ${ezlion.Location[lastAreaValue]}
 ${chalk.bold.blue("Category")}: ${run.ActualOverlayMode}
 ${chalk.bold.blue("Party Size")}: ${run.PartySize}
+${chalk.bold.blue("Time")}: ${run.FinalTimeDisplay} (${
+    run.FinalTimeValue
+  } frames)
 `);
 
   const runLink = terminalLink(
