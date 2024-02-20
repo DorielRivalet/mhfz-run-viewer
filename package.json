@@ -16,7 +16,7 @@
   "dependencies": {
     "chalk": "^5.3.0",
     "ezlion": "^1.0.1",
-    "inquirer": "^9.2.12",
+    "inquirer": "^9.2.15",
     "sqlite3": "^5.1.7",
     "terminal-link": "^3.0.0"
   }
